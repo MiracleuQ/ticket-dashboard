@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>工单数据分析报告 · 2026.04-07</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --clr-bg: #f8fafc;
+  --clr-surface: #ffffff;
+  --clr-border: #e5edf5;
+  --clr-heading: #061b31;
+  --clr-label: #273951;
+  --clr-body: #64748d;
+  --clr-accent: #533afd;
+  --clr-accent-hover: #4434d4;
+  --clr-purple-light: #b9b9f9;
+  --clr-success: #15be53;
+  --clr-danger: #ef4444;
+  --clr-warning: #F59E0B;
+  --shadow-card: rgba(50,50,93,0.08) 0px 6px 20px -6px, rgba(0,0,0,0.04) 0px 2px 8px -2px;
+  --shadow-elevated: rgba(50,50,93,0.25) 0px 30px 45px -30px, rgba(0,0,0,0.1) 0px 18px 36px -18px;
+  --radius: 8px;
+  --radius-sm: 4px;
+  --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+body {
+  font-family: var(--font);
+  background: var(--clr-bg);
+  color: var(--clr-body);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* HEADER */
+.header {
+  background: linear-gradient(135deg, #1c1e54 0%, #0d253d 50%, #061b31 100%);
+  color: #fff;
+  padding: 48px 0 40px;
+  position: relative;
+  overflow: hidden;
+}
+.header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(83,58,253,0.15) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.header::after {
+  content: '';
+  position: absolute;
+  bottom: -30%;
+  left: -10%;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(234,34,97,0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 32px;
+  position: relative;
+  z-index: 1;
+}
+.header h1 {
+  font-weight: 300;
+  font-size: 40px;
+  letter-spacing: -0.8px;
+  color: #fff;
+  margin-bottom: 8px;
+}
+.header .subtitle {
+  font-weight: 300;
+  font-size: 17px;
+  color: rgba(255,255,255,0.6);
+  letter-spacing: 0.2px;
+  line-height: 1.5;
+}
+.header .subtitle span {
+  color: rgba(255,255,255,0.85);
+}
+.header .subtitle .hl {
+  color: #f96bee;
+  font-weight: 400;
+}
+
+/* STATS ROW */
+.stats-row {
+  max-width: 1200px;
+  margin: -32px auto 0;
+  padding: 0 32px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+  position: relative;
+  z-index: 2;
+}
+.stat-card {
+  background: var(--clr-surface);
+  border-radius: var(--radius);
+  padding: 24px 20px;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--clr-border);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-elevated);
+}
+.stat-card .stat-label {
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--clr-body);
+  margin-bottom: 6px;
+}
+.stat-card .stat-value {
+  font-size: 32px;
+  font-weight: 500;
+  color: var(--clr-heading);
+  letter-spacing: -0.6px;
+  line-height: 1.2;
+}
+.stat-card .stat-sub {
+  font-size: 13px;
+  color: var(--clr-body);
+  margin-top: 4px;
+}
+.stat-card .stat-icon {
+  float: right;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+.stat-icon.purple { background: rgba(83,58,253,0.1); color: #533afd; }
+.stat-icon.blue { background: rgba(59,130,246,0.1); color: #3B82F6; }
+.stat-icon.green { background: rgba(16,185,129,0.1); color: #10B981; }
+.stat-icon.orange { background: rgba(249,115,22,0.1); color: #F97316; }
+.stat-icon.red { background: rgba(239,68,68,0.1); color: #ef4444; }
+
+/* MAIN CONTENT */
+.container {
+  max-width: 1200px;
+  margin: 32px auto;
+  padding: 0 32px;
+}
+
+.section-title {
+  font-weight: 400;
+  font-size: 20px;
+  color: var(--clr-heading);
+  letter-spacing: -0.3px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-title .badge {
+  font-size: 11px;
+  font-weight: 500;
+  background: rgba(83,58,253,0.08);
+  color: #533afd;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.2px;
+}
+.section-title .badge.red {
+  background: rgba(239,68,68,0.08);
+  color: #ef4444;
+}
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+
+.card {
+  background: var(--clr-surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--clr-border);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+.card-body { padding: 20px; }
+.card-body.compact { padding: 16px; }
+.card-header {
+  padding: 16px 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-header h3 {
+  font-weight: 400;
+  font-size: 15px;
+  color: var(--clr-heading);
+  letter-spacing: -0.2px;
+}
+.card-header .tag {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--clr-body);
+  background: var(--clr-bg);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.chart-wrapper { position: relative; width: 100%; }
+.chart-wrapper.h200 { height: 200px; }
+.chart-wrapper.h250 { height: 250px; }
+.chart-wrapper.h300 { height: 300px; }
+.chart-wrapper.h350 { height: 350px; }
+.chart-wrapper.h400 { height: 400px; }
+
+/* SUB-LABEL TABLE */
+.sub-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.sub-table th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--clr-label);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--clr-border);
+}
+.sub-table td {
+  padding: 7px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  color: var(--clr-heading);
+}
+.sub-table tr:last-child td { border-bottom: none; }
+.sub-table .bar-fill {
+  display: inline-block;
+  height: 6px;
+  border-radius: 3px;
+  min-width: 4px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+.sub-table .num {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--clr-label);
+  text-align: right;
+}
+.sub-table .pct {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--clr-body);
+  text-align: right;
+}
+
+/* TAB FILTERS */
+.tab-bar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.tab-btn {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--clr-border);
+  background: var(--clr-surface);
+  color: var(--clr-body);
+  cursor: pointer;
+  transition: all 0.12s;
+  font-family: var(--font);
+}
+.tab-btn:hover { border-color: var(--clr-purple-light); color: var(--clr-accent); }
+.tab-btn.active {
+  background: var(--clr-accent);
+  color: #fff;
+  border-color: var(--clr-accent);
+}
+
+/* KB MISSING RATE METER */
+.meter-row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 8px 0;
+}
+.meter-track {
+  flex: 1;
+  height: 28px;
+  background: #f1f5f9;
+  border-radius: 14px;
+  overflow: hidden;
+  position: relative;
+}
+.meter-fill {
+  height: 100%;
+  border-radius: 14px;
+  background: linear-gradient(90deg, #ef4444 0%, #F59E0B 50%, #10B981 100%);
+  transition: width 0.6s ease;
+  position: relative;
+}
+.meter-fill::after {
+  content: '';
+  position: absolute;
+  right: 4px; top: 4px; bottom: 4px;
+  width: 20px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 10px;
+}
+.meter-label {
+  font-size: 28px;
+  font-weight: 500;
+  color: var(--clr-heading);
+  font-family: var(--font-mono);
+  min-width: 80px;
+  text-align: right;
+}
+.meter-sub {
+  font-size: 12px;
+  color: var(--clr-body);
+  margin-top: 2px;
+  text-align: right;
+}
+
+/* Summary inline stats */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 12px;
+}
+.summary-item {
+  background: var(--clr-bg);
+  border-radius: 6px;
+  padding: 12px 14px;
+  border: 1px solid var(--clr-border);
+}
+.summary-item .s-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--clr-body);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.summary-item .s-value {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--clr-heading);
+  margin-top: 2px;
+}
+.summary-item .s-value .s-pct {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--clr-body);
+  margin-left: 4px;
+}
+
+
+.footer {
+  text-align: center;
+  padding: 24px 0 40px;
+  font-size: 12px;
+  color: var(--clr-body);
+  opacity: 0.6;
+}
+
+/* Responsive */
+@media (max-width: 1050px) {
+  .stats-row { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 900px) {
+  .stats-row { grid-template-columns: repeat(3, 1fr); }
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .summary-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .stats-row { grid-template-columns: 1fr; }
+  .header h1 { font-size: 28px; }
+  .container, .header-inner, .stats-row { padding-left: 16px; padding-right: 16px; }
+  .meter-row { flex-direction: column; gap: 8px; }
+  .meter-label { min-width: auto; }
+}
+
+/* Legend helper */
+.legend-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--clr-body);
+}
+.legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-inner">
+    <h1>工单数据分析报告</h1>
+    <div class="subtitle">
+      数据周期：<span>2026-04-26 — 2026-07-26</span> &nbsp;·&nbsp; 原始 <span>11,281</span> 条 → 规则清洗后 <span>1,165</span> 条
+      → <span>知识库缺失率 <span id="stat-total" style="color:inherit">—</span></span>
+    </div>
+  </div>
+</header>
+
+<!-- STATS ROW -->
+<div class="stats-row" id="statsRow">
+  <div class="stat-card"><div class="stat-icon purple">📋</div><div class="stat-label">一轮清洗</div><div class="stat-value" id="s1">—</div><div class="stat-sub">非空保留行</div></div>
+  <div class="stat-card"><div class="stat-icon blue">🏷️</div><div class="stat-label">标签类别数</div><div class="stat-value" id="s2">—</div><div class="stat-sub">问题分类数</div></div>
+  <div class="stat-card"><div class="stat-icon green">📅</div><div class="stat-label">覆盖天数</div><div class="stat-value" id="s3">—</div><div class="stat-sub">统计周期</div></div>
+  <div class="stat-card"><div class="stat-icon orange">📊</div><div class="stat-label">日均工单</div><div class="stat-value" id="s4">—</div><div class="stat-sub">平均每日提交量</div></div>
+  <div class="stat-card"><div class="stat-icon red">📚</div><div class="stat-label">知识库缺失率</div><div class="stat-value" id="s5">—</div><div class="stat-sub" id="s5sub">缺失编号 / 一轮清洗总数</div></div>
+</div>
+
+<div class="container">
+
+  <!-- 📊 ROW 1: Donut + Multi-label -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><h3>分类占比 · 环形图</h3><span class="tag">标签分布</span></div>
+      <div class="card-body">
+        <div class="chart-wrapper h350"><canvas id="donutChart"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>多标签分布</h3><span class="tag">单行标签数</span></div>
+      <div class="card-body">
+        <div class="chart-wrapper h250"><canvas id="multiChart"></canvas></div>
+        <div class="legend-inline" id="multiLegend"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 📊 ROW KB: Knowledge Base Missing Rate -->
+  <div style="margin-top:20px">
+    <div class="section-title">知识库缺失分析 <span class="badge red">J 列异常编码</span></div>
+    <div class="card">
+        <div class="card-header"><h3>知识库缺失率 · 进度条</h3><span class="tag">缺失 / 一轮清洗</span></div>
+        <div class="card-body">
+          <div class="meter-row">
+            <div style="flex:1">
+              <div class="meter-track">
+                <div class="meter-fill" id="kbMeter" style="width:0%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="meter-label" id="kbPctLabel">0%</div>
+              <div class="meter-sub" id="kbSubLabel">缺失率</div>
+            </div>
+          </div>
+          <div class="summary-grid" id="kbSummary">
+            <div class="summary-item"><div class="s-label">一轮清洗总数</div><div class="s-value" id="kbTotal">—</div></div>
+            <div class="summary-item"><div class="s-label">异常编码行数</div><div class="s-value" id="kbMissing">—</div></div>
+          </div>
+        </div>
+      </div>
+  </div>
+
+  <!-- 📊 ROW 2: Stacked Bar - Daily Trend -->
+  <div class="card" style="margin-top:20px">
+    <div class="card-header"><h3>每日工单趋势 · 堆叠柱状图</h3><span class="tag">按分类堆叠</span></div>
+    <div class="card-body">
+      <div class="tab-bar" id="trendTabs">
+        <button class="tab-btn active" data-range="all">全部</button>
+        <button class="tab-btn" data-range="month1">4-5月</button>
+        <button class="tab-btn" data-range="month2">6月</button>
+        <button class="tab-btn" data-range="month3">7月</button>
+      </div>
+      <div class="chart-wrapper h400"><canvas id="stackedChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- 📊 ROW 3: Horizontal Bars - Sub-label detail -->
+  <div style="margin-top:20px">
+    <div class="section-title">各类别子标签明细 <span class="badge">Top 子分类</span></div>
+    <div class="grid-3" id="subLabelGrid">
+      <!-- filled by JS -->
+    </div>
+  </div>
+
+  <!-- 📊 ROW 4: Line chart (weekly aggregated) + Radar -->
+  <div class="grid-2" style="margin-top:20px">
+    <div class="card">
+      <div class="card-header"><h3>周度趋势 · 折线图</h3><span class="tag">按周汇总</span></div>
+      <div class="card-body">
+        <div class="chart-wrapper h300"><canvas id="weeklyChart"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>分类对比 · 雷达图</h3><span class="tag">子标签丰富度</span></div>
+      <div class="card-body">
+        <div class="chart-wrapper h300"><canvas id="radarChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  工单数据分析报告 · 数据清洗后统计 · 2026.04-07
+</div>
+
+<script>
+Chart.register(ChartDataLabels);
+
+// ===================== DATA =====================
+const DATA = {
+  catNames: ["GM软件问题","VN软件问题","APP软件问题","Academy+会员","W+会员售前问题","W+会员售中问题","W+会员售后问题"],
+  catTotals: {"GM软件问题":505,"VN软件问题":46,"APP软件问题":104,"Academy+会员":15,"W+会员售前问题":158,"W+会员售中问题":83,"W+会员售后问题":298},
+  catColors: {"GM软件问题":"#3B82F6","VN软件问题":"#10B981","APP软件问题":"#F59E0B","Academy+会员":"#EC4899","W+会员售前问题":"#8B5CF6","W+会员售中问题":"#F97316","W+会员售后问题":"#EF4444"},
+  sortedSub: {
+    "GM软件问题":[["Usage Issue/使用问题",224],["Bug Report/Bug反馈",156],["Feature Request/需求建议",84],["Account & Access/账号与权限",25],["Other其他",16]],
+    "VN软件问题":[["Bug Report/Bug反馈",21],["Usage Issue/使用问题",16],["Feature Request/需求建议",6],["Account & Access/账号与权限",2],["Other/其他",1]],
+    "APP软件问题":[["Usage Issue/使用问题",55],["Bug Report/Bug反馈",32],["Feature Request/需求建议",7],["Other/其他",5],["Account & Access/账号与权限",5]],
+    "Academy+会员":[["Pre-sales: A+ Membership/A+会员售前问题",11],["After-sales: A+ Membership/A+会员售后问题",4]],
+    "W+会员售前问题":[["Membership Features/会员功能",86],["Pricing & Promotions/价格活动",72]],
+    "W+会员售中问题":[["Order Issue/订单问题",40],["Return/Exchange (Unused)/未使用退货换货",37],["Payment Issue/支付问题",6]],
+    "W+会员售后问题":[["Return/Exchange (Used)/已使用退货/换货",90],["Usage Consultation/使用咨询",63],["Bug Report/Bug反馈",45],["how-to_question/使用咨询w",30],["Account & Permissions/账号与权限",24],["Feature Request/需求建议",17],["Other/其他",15],["Customer Complaint/用户投诉",8],["improvement_suggestion/使用建议w",6]]
+  },
+  sortedDates: ["2026-04-26","2026-04-27","2026-04-28","2026-04-29","2026-04-30","2026-05-01","2026-05-02","2026-05-03","2026-05-04","2026-05-05","2026-05-06","2026-05-07","2026-05-08","2026-05-09","2026-05-10","2026-05-11","2026-05-12","2026-05-13","2026-05-14","2026-05-15","2026-05-16","2026-05-17","2026-05-18","2026-05-19","2026-05-20","2026-05-21","2026-05-22","2026-05-23","2026-05-24","2026-05-25","2026-05-26","2026-05-27","2026-05-28","2026-05-29","2026-05-30","2026-05-31","2026-06-01","2026-06-02","2026-06-03","2026-06-04","2026-06-05","2026-06-06","2026-06-07","2026-06-08","2026-06-09","2026-06-10","2026-06-11","2026-06-12","2026-06-13","2026-06-14","2026-06-15","2026-06-16","2026-06-17","2026-06-18","2026-06-19","2026-06-20","2026-06-21","2026-06-22","2026-06-23","2026-06-24","2026-06-25","2026-06-26","2026-06-27","2026-06-28","2026-06-29","2026-06-30","2026-07-01","2026-07-02","2026-07-03","2026-07-04","2026-07-05","2026-07-06","2026-07-07","2026-07-08","2026-07-09","2026-07-10","2026-07-11","2026-07-12","2026-07-13","2026-07-14","2026-07-15","2026-07-16","2026-07-17","2026-07-18","2026-07-19","2026-07-20","2026-07-21","2026-07-22","2026-07-23","2026-07-24","2026-07-25","2026-07-26"],
+  dateVals: [6,11,11,12,13,6,9,14,12,4,10,9,11,6,7,9,7,9,7,13,13,7,8,7,11,10,10,8,9,11,14,13,10,13,10,8,20,18,12,10,11,7,12,12,9,12,11,12,5,13,8,17,10,12,11,13,6,17,17,13,10,22,8,13,16,22,10,22,9,11,20,35,38,12,15,16,15,14,21,19,23,18,9,12,4,17,16,15,25,21,7,14],
+  dailyCat: {
+    "GM软件问题":{"2026-04-26":4,"2026-04-27":3,"2026-04-28":6,"2026-04-29":3,"2026-04-30":3,"2026-05-01":1,"2026-05-02":4,"2026-05-03":4,"2026-05-04":5,"2026-05-05":1,"2026-05-06":5,"2026-05-07":2,"2026-05-08":5,"2026-05-09":3,"2026-05-10":3,"2026-05-11":5,"2026-05-12":4,"2026-05-13":1,"2026-05-14":1,"2026-05-15":3,"2026-05-16":3,"2026-05-17":2,"2026-05-18":2,"2026-05-19":5,"2026-05-20":6,"2026-05-21":5,"2026-05-22":6,"2026-05-23":2,"2026-05-24":4,"2026-05-25":3,"2026-05-26":9,"2026-05-27":5,"2026-05-28":3,"2026-05-29":7,"2026-05-30":2,"2026-05-31":5,"2026-06-01":9,"2026-06-02":7,"2026-06-03":5,"2026-06-04":5,"2026-06-05":4,"2026-06-06":1,"2026-06-07":2,"2026-06-08":4,"2026-06-09":4,"2026-06-10":8,"2026-06-11":8,"2026-06-12":6,"2026-06-13":2,"2026-06-14":2,"2026-06-15":2,"2026-06-16":7,"2026-06-17":7,"2026-06-18":4,"2026-06-19":6,"2026-06-20":6,"2026-06-21":2,"2026-06-22":8,"2026-06-23":9,"2026-06-24":6,"2026-06-25":6,"2026-06-26":9,"2026-06-27":1,"2026-06-28":5,"2026-06-29":10,"2026-06-30":5,"2026-07-01":7,"2026-07-02":15,"2026-07-03":6,"2026-07-04":4,"2026-07-05":11,"2026-07-06":23,"2026-07-07":25,"2026-07-08":7,"2026-07-09":4,"2026-07-10":9,"2026-07-11":7,"2026-07-12":6,"2026-07-13":9,"2026-07-14":7,"2026-07-15":11,"2026-07-16":12,"2026-07-17":5,"2026-07-18":4,"2026-07-19":2,"2026-07-20":3,"2026-07-21":2,"2026-07-22":8,"2026-07-23":11,"2026-07-24":7,"2026-07-25":3,"2026-07-26":2},
+    "VN软件问题":{"2026-04-26":1,"2026-04-28":1,"2026-04-30":1,"2026-05-04":1,"2026-05-07":1,"2026-05-14":2,"2026-05-16":1,"2026-05-28":1,"2026-05-29":1,"2026-05-30":1,"2026-06-01":1,"2026-06-04":1,"2026-06-08":1,"2026-06-10":1,"2026-06-12":2,"2026-06-13":1,"2026-06-16":3,"2026-06-22":1,"2026-06-24":1,"2026-06-26":5,"2026-06-27":1,"2026-06-28":2,"2026-06-29":1,"2026-06-30":4,"2026-07-01":1,"2026-07-07":1,"2026-07-12":1,"2026-07-13":3,"2026-07-17":1,"2026-07-21":2,"2026-07-24":1},
+    "APP软件问题":{"2026-04-28":2,"2026-04-29":1,"2026-04-30":2,"2026-05-01":2,"2026-05-02":2,"2026-05-03":1,"2026-05-08":2,"2026-05-09":2,"2026-05-13":2,"2026-05-14":1,"2026-05-15":1,"2026-05-16":2,"2026-05-20":1,"2026-05-22":1,"2026-05-23":1,"2026-05-24":1,"2026-05-25":1,"2026-05-27":3,"2026-05-29":1,"2026-05-31":1,"2026-06-01":1,"2026-06-02":1,"2026-06-04":1,"2026-06-05":4,"2026-06-07":4,"2026-06-08":1,"2026-06-09":2,"2026-06-10":1,"2026-06-11":1,"2026-06-14":3,"2026-06-15":1,"2026-06-16":2,"2026-06-17":1,"2026-06-18":1,"2026-06-19":1,"2026-06-20":4,"2026-06-21":1,"2026-06-22":1,"2026-06-23":1,"2026-06-24":2,"2026-06-25":1,"2026-06-27":1,"2026-06-29":1,"2026-06-30":2,"2026-07-01":1,"2026-07-02":1,"2026-07-03":1,"2026-07-04":1,"2026-07-05":5,"2026-07-06":2,"2026-07-07":3,"2026-07-08":1,"2026-07-09":1,"2026-07-10":1,"2026-07-12":1,"2026-07-16":1,"2026-07-20":2,"2026-07-21":2,"2026-07-22":1,"2026-07-23":2,"2026-07-24":6,"2026-07-25":2,"2026-07-26":1},
+    "Academy+会员":{"2026-05-03":1,"2026-05-04":1,"2026-05-06":1,"2026-05-16":1,"2026-05-26":1,"2026-06-06":1,"2026-06-07":1,"2026-06-25":1,"2026-06-30":1,"2026-07-03":1,"2026-07-12":1,"2026-07-13":1,"2026-07-18":1,"2026-07-21":1,"2026-07-26":1},
+    "W+会员售前问题":{"2026-04-27":1,"2026-04-28":1,"2026-04-29":2,"2026-04-30":2,"2026-05-01":1,"2026-05-02":1,"2026-05-03":5,"2026-05-04":3,"2026-05-05":1,"2026-05-06":2,"2026-05-07":3,"2026-05-08":1,"2026-05-10":1,"2026-05-11":2,"2026-05-13":2,"2026-05-14":1,"2026-05-15":6,"2026-05-16":3,"2026-05-18":4,"2026-05-19":1,"2026-05-20":3,"2026-05-21":2,"2026-05-23":4,"2026-05-24":1,"2026-05-25":2,"2026-05-26":2,"2026-05-27":2,"2026-05-28":2,"2026-05-29":1,"2026-05-30":4,"2026-05-31":1,"2026-06-01":7,"2026-06-02":7,"2026-06-03":2,"2026-06-05":1,"2026-06-06":1,"2026-06-07":1,"2026-06-08":2,"2026-06-09":1,"2026-06-10":2,"2026-06-11":1,"2026-06-12":1,"2026-06-13":2,"2026-06-14":1,"2026-06-15":1,"2026-06-16":1,"2026-06-17":2,"2026-06-19":2,"2026-06-20":1,"2026-06-21":1,"2026-06-23":2,"2026-06-24":1,"2026-06-26":4,"2026-06-27":1,"2026-06-29":2,"2026-06-30":3,"2026-07-05":2,"2026-07-06":1,"2026-07-08":1,"2026-07-09":1,"2026-07-10":2,"2026-07-11":2,"2026-07-12":4,"2026-07-13":1,"2026-07-14":2,"2026-07-15":3,"2026-07-16":1,"2026-07-18":4,"2026-07-20":5,"2026-07-21":3,"2026-07-22":1,"2026-07-23":3,"2026-07-24":1,"2026-07-25":1,"2026-07-26":3},
+    "W+会员售中问题":{"2026-04-26":1,"2026-04-27":4,"2026-04-28":1,"2026-04-30":2,"2026-05-03":2,"2026-05-06":1,"2026-05-07":2,"2026-05-08":2,"2026-05-12":1,"2026-05-16":2,"2026-05-22":1,"2026-05-23":1,"2026-05-25":1,"2026-05-27":1,"2026-05-30":1,"2026-06-03":1,"2026-06-04":1,"2026-06-05":1,"2026-06-12":1,"2026-06-14":3,"2026-06-16":1,"2026-06-18":1,"2026-06-20":1,"2026-06-21":1,"2026-06-22":2,"2026-06-24":2,"2026-06-26":2,"2026-06-27":2,"2026-06-29":1,"2026-06-30":1,"2026-07-02":4,"2026-07-04":3,"2026-07-06":5,"2026-07-07":4,"2026-07-08":1,"2026-07-09":3,"2026-07-10":1,"2026-07-11":1,"2026-07-13":1,"2026-07-14":4,"2026-07-15":1,"2026-07-16":1,"2026-07-17":1,"2026-07-18":1,"2026-07-20":1,"2026-07-21":1,"2026-07-22":1,"2026-07-23":2,"2026-07-24":1,"2026-07-26":2},
+    "W+会员售后问题":{"2026-04-27":3,"2026-04-29":7,"2026-04-30":5,"2026-05-01":2,"2026-05-02":2,"2026-05-03":2,"2026-05-04":2,"2026-05-05":2,"2026-05-06":1,"2026-05-07":1,"2026-05-08":1,"2026-05-09":1,"2026-05-10":3,"2026-05-11":2,"2026-05-12":2,"2026-05-13":4,"2026-05-14":2,"2026-05-15":3,"2026-05-16":2,"2026-05-17":5,"2026-05-18":2,"2026-05-19":1,"2026-05-20":1,"2026-05-21":3,"2026-05-22":2,"2026-05-24":3,"2026-05-25":4,"2026-05-26":2,"2026-05-27":3,"2026-05-28":4,"2026-05-29":4,"2026-05-30":3,"2026-05-31":1,"2026-06-01":2,"2026-06-02":3,"2026-06-03":5,"2026-06-04":3,"2026-06-05":2,"2026-06-06":4,"2026-06-07":4,"2026-06-08":5,"2026-06-09":2,"2026-06-11":2,"2026-06-12":2,"2026-06-14":5,"2026-06-15":4,"2026-06-16":3,"2026-06-17":1,"2026-06-18":6,"2026-06-19":2,"2026-06-20":3,"2026-06-21":1,"2026-06-22":7,"2026-06-23":5,"2026-06-24":1,"2026-06-25":2,"2026-06-26":5,"2026-06-27":2,"2026-06-28":6,"2026-06-29":2,"2026-06-30":6,"2026-07-01":2,"2026-07-02":4,"2026-07-03":1,"2026-07-04":4,"2026-07-05":2,"2026-07-06":5,"2026-07-07":5,"2026-07-08":2,"2026-07-09":8,"2026-07-10":3,"2026-07-11":5,"2026-07-12":3,"2026-07-13":6,"2026-07-14":7,"2026-07-15":8,"2026-07-16":4,"2026-07-17":2,"2026-07-18":6,"2026-07-19":2,"2026-07-20":6,"2026-07-21":6,"2026-07-22":5,"2026-07-23":8,"2026-07-24":6,"2026-07-25":2,"2026-07-26":6}
+  },
+  multiCounts: {"1":1122,"2":42,"3":1},
+  totalRows: 1165,
+  kbMissing: {
+    total: 1165,
+    missing: 430,
+    valid: 735,
+    detail: [
+      ["0000", 309, "zero"],
+      ["1111", 59, "one"],
+      ["(空)", 50, "empty"],
+      ["0", 6, "zero"],
+      ["11111", 2, "one"],
+      ["000", 1, "zero"],
+      ["11", 1, "one"],
+      ["1", 1, "one"],
+      ["00", 1, "zero"]
+    ]
+  }
+};
+
+const CN = DATA.catNames;
+const CT = DATA.catTotals;
+const CC = DATA.catColors;
+const TOTAL = DATA.totalRows;
+const KB = DATA.kbMissing;
+
+// ===================== STATS =====================
+const kbRate = (KB.missing / KB.total * 100).toFixed(1);
+document.getElementById('stat-total').textContent = kbRate + '%';
+document.getElementById('s1').textContent = TOTAL.toLocaleString();
+document.getElementById('s2').textContent = '7';
+document.getElementById('s3').textContent = DATA.sortedDates.length;
+const avg = (TOTAL / DATA.sortedDates.length).toFixed(1);
+document.getElementById('s4').textContent = avg;
+document.getElementById('s5').textContent = kbRate + '%';
+document.getElementById('s5sub').textContent = KB.missing + ' / ' + KB.total + ' 行';
+
+// ===================== KB MISSING SECTION =====================
+// Meter
+const pct = KB.missing / KB.total * 100;
+document.getElementById('kbMeter').style.width = pct + '%';
+document.getElementById('kbPctLabel').textContent = pct.toFixed(1) + '%';
+const grade = pct >= 30 ? '高' : pct >= 15 ? '中' : '低';
+document.getElementById('kbSubLabel').textContent = grade + '缺失率（' + KB.missing + '/' + KB.total + '）';
+document.getElementById('kbTotal').textContent = KB.total.toLocaleString();
+document.getElementById('kbMissing').textContent = KB.missing.toLocaleString();
+
+// ===================== DONUT CHART =====================
+const donutCtx = document.getElementById('donutChart').getContext('2d');
+const donutLabels = CN.map(n => n + '\n(' + CT[n] + '条)');
+const donutData = CN.map(n => CT[n]);
+const donutColors = CN.map(n => CC[n]);
+new Chart(donutCtx, {
+  type: 'doughnut',
+  data: { labels: donutLabels, datasets: [{ data: donutData, backgroundColor: donutColors, borderWidth: 3, borderColor: '#fff' }] },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    cutout: '55%',
+    plugins: {
+      legend: { position: 'right', labels: { font: { family: 'Inter', size: 11, weight: '500' }, color: '#273951', padding: 14, usePointStyle: true, pointStyle: 'circle' } },
+      datalabels: {
+        color: '#fff', font: { family: 'Inter', size: 11, weight: '600' },
+        formatter: (v) => { const p = (v / TOTAL * 100).toFixed(1); return p < 4 ? '' : p + '%'; },
+        anchor: 'center', offset: 0
+      }
+    }
+  },
+  plugins: [ChartDataLabels]
+});
+
+// ===================== MULTI-LABEL CHART =====================
+const multiEl = document.getElementById('multiChart').getContext('2d');
+const mLabels = ['仅 1 个标签', '2 个标签', '3 个标签'];
+const mData = [1122, 42, 1];
+const mColors = ['#3B82F6', '#8B5CF6', '#EC4899'];
+new Chart(multiEl, {
+  type: 'doughnut',
+  data: { labels: mLabels, datasets: [{ data: mData, backgroundColor: mColors, borderWidth: 3, borderColor: '#fff' }] },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    cutout: '60%',
+    plugins: {
+      legend: { display: false },
+      datalabels: {
+        color: '#fff', font: { family: 'Inter', size: 12, weight: '600' },
+        formatter: (v) => (v / TOTAL * 100).toFixed(1) + '%',
+        anchor: 'center'
+      }
+    }
+  },
+  plugins: [ChartDataLabels]
+});
+const mlEl = document.getElementById('multiLegend');
+mLabels.forEach((l, i) => {
+  const d = document.createElement('div'); d.className = 'legend-item';
+  d.innerHTML = '<span class="legend-dot" style="background:'+mColors[i]+'"></span>'+l+' <strong>'+mData[i]+'</strong> ('+(mData[i]/TOTAL*100).toFixed(1)+'%)';
+  mlEl.appendChild(d);
+});
+
+// ===================== STACKED BAR =====================
+const stackedCtx = document.getElementById('stackedChart').getContext('2d');
+
+let stackedChart;
+function renderStacked(range) {
+  let labels, datasets;
+  const all = DATA.sortedDates;
+  if (range === 'all') { labels = all; }
+  else if (range === 'month1') { labels = all.filter(d => d < '2026-06-01'); }
+  else if (range === 'month2') { labels = all.filter(d => d.startsWith('2026-06')); }
+  else { labels = all.filter(d => d.startsWith('2026-07')); }
+  const ds = CN.map(cn => ({
+    label: cn,
+    data: labels.map(d => (DATA.dailyCat[cn][d] || 0)),
+    backgroundColor: CC[cn],
+    borderWidth: 0,
+    borderRadius: 1
+  }));
+  if (stackedChart) stackedChart.destroy();
+  stackedChart = new Chart(stackedCtx, {
+    type: 'bar',
+    data: { labels, datasets: ds },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { stacked: true, grid: { display: false }, ticks: { font: { family: 'Inter', size: 9 }, color: '#64748d', maxTicksLimit: 25 } },
+        y: { stacked: true, beginAtZero: true, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { family: 'Inter', size: 10 }, color: '#64748d' } }
+      },
+      plugins: {
+        legend: { position: 'top', labels: { font: { family: 'Inter', size: 11 }, color: '#273951', usePointStyle: true, pointStyle: 'circle', padding: 16 } },
+        datalabels: { display: false }
+      }
+    },
+    plugins: []
+  });
+}
+renderStacked('all');
+document.querySelectorAll('#trendTabs .tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#trendTabs .tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderStacked(btn.dataset.range);
+  });
+});
+
+// ===================== SUB-LABEL TABLES =====================
+const grid = document.getElementById('subLabelGrid');
+CN.forEach((cn) => {
+  const items = DATA.sortedSub[cn];
+  const total = CT[cn];
+  const div = document.createElement('div'); div.className = 'card';
+  let rows = '';
+  items.forEach(([label, cnt]) => {
+    const pct = (cnt / total * 100).toFixed(1);
+    const barW = Math.max(4, cnt / total * 100);
+    rows += '<tr><td><span class="bar-fill" style="width:'+barW+'%;background:'+CC[cn]+'"></span>'+label+'</td><td class="num">'+cnt+'</td><td class="pct">'+pct+'%</td></tr>';
+  });
+  div.innerHTML = '<div class="card-header"><h3>'+cn+'</h3><span class="tag">'+total+' 条</span></div><div class="card-body compact"><table class="sub-table"><thead><tr><th>子分类</th><th style="text-align:right">数量</th><th style="text-align:right">占比</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  grid.appendChild(div);
+});
+
+// ===================== WEEKLY LINE CHART =====================
+const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
+function getWeekNumber(d) {
+  const dt = new Date(d + 'T00:00:00');
+  const dayNum = dt.getUTCDay() || 7;
+  dt.setUTCDate(dt.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(dt.getUTCFullYear(),0,1));
+  return Math.ceil((((dt - yearStart) / 86400000) + 1)/7);
+}
+const weekMap = {};
+DATA.sortedDates.forEach((d, i) => {
+  const wk = d.slice(0,7) + '-W' + String(getWeekNumber(d)).padStart(2,'0');
+  if (!weekMap[wk]) weekMap[wk] = 0;
+  weekMap[wk] += DATA.dateVals[i];
+});
+const wkSorted = Object.keys(weekMap).sort();
+const wkLabels = wkSorted.map(w => w.slice(5));
+const wkData = wkSorted.map(w => weekMap[w]);
+new Chart(weeklyCtx, {
+  type: 'line',
+  data: {
+    labels: wkLabels,
+    datasets: [{
+      label: '周工单量',
+      data: wkData,
+      borderColor: '#533afd',
+      backgroundColor: 'rgba(83,58,253,0.08)',
+      fill: true,
+      tension: 0.35,
+      pointRadius: 4,
+      pointBackgroundColor: '#533afd',
+      pointBorderColor: '#fff',
+      pointBorderWidth: 2,
+      borderWidth: 2.5
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 9 }, color: '#64748d', maxTicksLimit: 15 } },
+      y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { family: 'Inter', size: 10 }, color: '#64748d' } }
+    },
+    plugins: {
+      legend: { display: false },
+      datalabels: {
+        anchor: 'end', align: 'top',
+        color: '#533afd', font: { family: 'Inter', size: 9, weight: '600' },
+        formatter: (v) => v
+      }
+    }
+  },
+  plugins: [ChartDataLabels]
+});
+
+// ===================== RADAR CHART =====================
+const radarCtx = document.getElementById('radarChart').getContext('2d');
+const radarLabels = CN;
+const diversity = CN.map(cn => DATA.sortedSub[cn].length);
+const volumes = CN.map(cn => CT[cn]);
+const maxDiv = Math.max(...diversity);
+const maxVol = Math.max(...volumes);
+const divNorm = diversity.map(v => v / maxDiv * 100);
+const volNorm = volumes.map(v => v / maxVol * 100);
+new Chart(radarCtx, {
+  type: 'radar',
+  data: {
+    labels: radarLabels,
+    datasets: [
+      { label: '子标签丰富度', data: divNorm, borderColor: '#8B5CF6', backgroundColor: 'rgba(139,92,246,0.15)', pointBackgroundColor: '#8B5CF6', borderWidth: 2 },
+      { label: '工单量', data: volNorm, borderColor: '#3B82F6', backgroundColor: 'rgba(59,130,246,0.08)', pointBackgroundColor: '#3B82F6', borderWidth: 2 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    scales: {
+      r: {
+        beginAtZero: true, max: 100,
+        grid: { color: 'rgba(0,0,0,0.06)' },
+        ticks: { display: false },
+        pointLabels: { font: { family: 'Inter', size: 11 }, color: '#273951' }
+      }
+    },
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 11 }, color: '#273951', usePointStyle: true, padding: 16 } },
+      datalabels: { display: false }
+    }
+  }
+});
+</script>
+</body>
+</html>
