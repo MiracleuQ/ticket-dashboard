@@ -371,6 +371,55 @@ body {
 }
 
 
+/* Monthly sub-label table */
+.monthly-table-wrap { overflow-x: auto; }
+.monthly-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.monthly-table th {
+  font-weight: 500;
+  color: var(--clr-label);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--clr-border);
+  text-align: center;
+  white-space: nowrap;
+}
+.monthly-table th:first-child { text-align: left; }
+.monthly-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  color: var(--clr-heading);
+  text-align: center;
+  white-space: nowrap;
+}
+.monthly-table td:first-child { text-align: left; }
+.monthly-table tr:last-child td { border-bottom: none; }
+.monthly-table .total-row td { font-weight: 600; background: var(--clr-bg); border-top: 2px solid var(--clr-border); }
+.monthly-table .pct-cell {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.monthly-table .pct-bar {
+  display: inline-block;
+  height: 14px;
+  border-radius: 3px;
+  min-width: 2px;
+  vertical-align: middle;
+  margin-right: 6px;
+  opacity: 0.7;
+}
+.monthly-table .total-num {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 12px;
+}
+.monthly-cat-tabs { margin-bottom: 0; }
+
 .footer {
   text-align: center;
   padding: 24px 0 40px;
@@ -521,6 +570,22 @@ body {
       </div>
     </div>
   </div>
+  <!-- 📊 ROW 5: Monthly sub-label percentage table -->
+  <div style="margin-top:20px">
+    <div class="section-title">子标签月度百分比分布 <span class="badge">按分类切换</span></div>
+    <div class="card">
+      <div class="card-body">
+        <div class="tab-bar monthly-cat-tabs" id="monthlyCatTabs">
+        </div>
+        <div class="monthly-table-wrap" id="monthlyTableWrap">
+          <table class="monthly-table" id="monthlyTable">
+            <thead id="monthlyThead"></thead>
+            <tbody id="monthlyTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
 
 </div>
 
@@ -558,6 +623,15 @@ const DATA = {
   },
   multiCounts: {"1":1122,"2":42,"3":1},
   totalRows: 1165,
+  monthlyData: {
+    "GM软件问题":{"months":["2026-04","2026-05","2026-06","2026-07"],"labels":["Account & Access/账号与权限","Bug Report/Bug反馈","Feature Request/需求建议","Other其他","Usage Issue/使用问题"],"counts":{"2026-04":{"Account & Access/账号与权限":1,"Bug Report/Bug反馈":3,"Other其他":2,"Usage Issue/使用问题":13},"2026-05":{"Bug Report/Bug反馈":32,"Account & Access/账号与权限":4,"Usage Issue/使用问题":62,"Other其他":4,"Feature Request/需求建议":14},"2026-06":{"Bug Report/Bug反馈":49,"Feature Request/需求建议":26,"Usage Issue/使用问题":76,"Other其他":1,"Account & Access/账号与权限":8},"2026-07":{"Bug Report/Bug反馈":72,"Feature Request/需求建议":44,"Usage Issue/使用问题":73,"Other其他":9,"Account & Access/账号与权限":12}},"totals":{"2026-04":19,"2026-05":116,"2026-06":160,"2026-07":210}},
+    "VN软件问题":{"months":["2026-04","2026-05","2026-06","2026-07"],"labels":["Account & Access/账号与权限","Bug Report/Bug反馈","Feature Request/需求建议","Other/其他","Usage Issue/使用问题"],"counts":{"2026-04":{"Bug Report/Bug反馈":2,"Usage Issue/使用问题":1},"2026-05":{"Account & Access/账号与权限":1,"Usage Issue/使用问题":4,"Bug Report/Bug反馈":2,"Feature Request/需求建议":1},"2026-06":{"Feature Request/需求建议":4,"Usage Issue/使用问题":5,"Bug Report/Bug反馈":15,"Account & Access/账号与权限":1},"2026-07":{"Other/其他":1,"Feature Request/需求建议":1,"Bug Report/Bug反馈":2,"Usage Issue/使用问题":6}},"totals":{"2026-04":3,"2026-05":8,"2026-06":25,"2026-07":10}},
+    "APP软件问题":{"months":["2026-04","2026-05","2026-06","2026-07"],"labels":["Account & Access/账号与权限","Bug Report/Bug反馈","Feature Request/需求建议","Other/其他","Usage Issue/使用问题"],"counts":{"2026-04":{"Usage Issue/使用问题":3,"Bug Report/Bug反馈":2},"2026-05":{"Bug Report/Bug反馈":8,"Usage Issue/使用问题":15,"Other/其他":2},"2026-06":{"Usage Issue/使用问题":22,"Feature Request/需求建议":6,"Bug Report/Bug反馈":7,"Other/其他":2,"Account & Access/账号与权限":2},"2026-07":{"Usage Issue/使用问题":15,"Bug Report/Bug反馈":15,"Account & Access/账号与权限":3,"Feature Request/需求建议":1,"Other/其他":1}},"totals":{"2026-04":5,"2026-05":25,"2026-06":39,"2026-07":35}},
+    "Academy+会员":{"months":["2026-05","2026-06","2026-07"],"labels":["After-sales: A+ Membership/A+会员售后问题","Pre-sales: A+ Membership/A+会员售前问题"],"counts":{"2026-05":{"Pre-sales: A+ Membership/A+会员售前问题":3,"After-sales: A+ Membership/A+会员售后问题":2},"2026-06":{"After-sales: A+ Membership/A+会员售后问题":2,"Pre-sales: A+ Membership/A+会员售前问题":2},"2026-07":{"Pre-sales: A+ Membership/A+会员售前问题":6}},"totals":{"2026-05":5,"2026-06":4,"2026-07":6}},
+    "W+会员售前问题":{"months":["2026-04","2026-05","2026-06","2026-07"],"labels":["Membership Features/会员功能","Pricing & Promotions/价格活动"],"counts":{"2026-04":{"Pricing & Promotions/价格活动":3,"Membership Features/会员功能":3},"2026-05":{"Membership Features/会员功能":38,"Pricing & Promotions/价格活动":23},"2026-06":{"Membership Features/会员功能":23,"Pricing & Promotions/价格活动":27},"2026-07":{"Membership Features/会员功能":22,"Pricing & Promotions/价格活动":19}},"totals":{"2026-04":6,"2026-05":61,"2026-06":50,"2026-07":41}},
+    "W+会员售中问题":{"months":["2026-04","2026-05","2026-06","2026-07"],"labels":["Order Issue/订单问题","Payment Issue/支付问题","Return/Exchange (Unused)/未使用退货换货"],"counts":{"2026-04":{"Order Issue/订单问题":5,"Return/Exchange (Unused)/未使用退货换货":3},"2026-05":{"Order Issue/订单问题":6,"Return/Exchange (Unused)/未使用退货换货":8,"Payment Issue/支付问题":1},"2026-06":{"Order Issue/订单问题":13,"Return/Exchange (Unused)/未使用退货换货":8},"2026-07":{"Order Issue/订单问题":16,"Payment Issue/支付问题":5,"Return/Exchange (Unused)/未使用退货换货":18}},"totals":{"2026-04":8,"2026-05":15,"2026-06":21,"2026-07":39}},
+    "W+会员售后问题":{"months":["2026-04","2026-05","2026-06","2026-07"],"labels":["Account & Permissions/账号与权限","Bug Report/Bug反馈","Customer Complaint/用户投诉","Feature Request/需求建议","Other/其他","Return/Exchange (Used)/已使用退货/换货","Usage Consultation/使用咨询","how-to_question/使用咨询w","improvement_suggestion/使用建议w"],"counts":{"2026-04":{"how-to_question/使用咨询w":11,"Return/Exchange (Used)/已使用退货/换货":3,"improvement_suggestion/使用建议w":1},"2026-05":{"how-to_question/使用咨询w":19,"Return/Exchange (Used)/已使用退货/换货":26,"Bug Report/Bug反馈":11,"improvement_suggestion/使用建议w":5,"Customer Complaint/用户投诉":2,"Account & Permissions/账号与权限":2,"Feature Request/需求建议":3,"Usage Consultation/使用咨询":2},"2026-06":{"Return/Exchange (Used)/已使用退货/换货":20,"Usage Consultation/使用咨询":37,"Bug Report/Bug反馈":14,"Feature Request/需求建议":7,"Other/其他":10,"Account & Permissions/账号与权限":7},"2026-07":{"Usage Consultation/使用咨询":24,"Bug Report/Bug反馈":20,"Return/Exchange (Used)/已使用退货/换货":41,"Account & Permissions/账号与权限":15,"Other/其他":5,"Customer Complaint/用户投诉":6,"Feature Request/需求建议":7}},"totals":{"2026-04":15,"2026-05":70,"2026-06":95,"2026-07":118}}
+  },
   kbMissing: {
     total: 1165,
     missing: 430,
@@ -803,7 +877,79 @@ new Chart(radarCtx, {
       datalabels: { display: false }
     }
   }
+});\n\n// ===================== MONTHLY SUB-LABEL TABLE =====================
+const monthLabels = {'2026-04':'4月','2026-05':'5月','2026-06':'6月','2026-07':'7月'};
+const allCatNames = Object.keys(DATA.monthlyData);
+const catTabsEl = document.getElementById('monthlyCatTabs');
+const theadEl = document.getElementById('monthlyThead');
+const tbodyEl = document.getElementById('monthlyTbody');
+
+let activeMonthlyCat = allCatNames[0];
+
+function renderMonthlyTable(catName) {
+  const md = DATA.monthlyData[catName];
+  const months = md.months;
+  const labels = md.labels;
+  const counts = md.counts;
+  const totals = md.totals;
+  const color = DATA.catColors[catName] || '#533afd';
+
+  // Header
+  let hHtml = '<tr><th>子分类</th>';
+  months.forEach(m => { hHtml += '<th>' + (monthLabels[m] || m) + '</th>'; });
+  hHtml += '<th>平均占比</th></tr>';
+  theadEl.innerHTML = hHtml;
+
+  // Body
+  let bHtml = '';
+  labels.forEach(label => {
+    bHtml += '<tr><td>' + label + '</td>';
+    const pcts = [];
+    months.forEach(m => {
+      const cnt = (counts[m] && counts[m][label]) || 0;
+      const total = totals[m] || 1;
+      const pct = cnt / total;
+      pcts.push(pct);
+      const barColor = color;
+      const barW = Math.max(2, pct * 80);
+      bHtml += '<td class="pct-cell"><span class="pct-bar" style="width:' + barW.toFixed(0) + '%;background:' + barColor + '"></span>' + (pct * 100).toFixed(1) + '%</td>';
+    });
+    const avgPct = pcts.reduce((a, b) => a + b, 0) / pcts.length;
+    bHtml += '<td class="pct-cell"><strong>' + (avgPct * 100).toFixed(1) + '%</strong></td>';
+    bHtml += '</tr>';
+  });
+
+  // Total row
+  bHtml += '<tr class="total-row"><td><strong>合计</strong></td>';
+  months.forEach(m => {
+    bHtml += '<td><span class="total-num">' + (totals[m] || 0) + '</span></td>';
+  });
+  bHtml += '<td><span class="total-num">' + labels.reduce((sum, l) => {
+    const pcts2 = months.map(m => ((counts[m] && counts[m][l]) || 0) / (totals[m] || 1));
+    return sum + pcts2.reduce((a, b) => a + b, 0) / pcts2.length;
+  }, 0).toFixed(0) + '%</span></td>';
+  bHtml += '</tr>';
+
+  tbodyEl.innerHTML = bHtml;
+}
+
+// Build tabs
+allCatNames.forEach((cn, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'tab-btn' + (i === 0 ? ' active' : '');
+  btn.textContent = cn;
+  btn.dataset.cat = cn;
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#monthlyCatTabs .tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeMonthlyCat = cn;
+    renderMonthlyTable(cn);
+  });
+  catTabsEl.appendChild(btn);
 });
+
+// Initial render
+renderMonthlyTable(allCatNames[0]);
 </script>
 </body>
 </html>
